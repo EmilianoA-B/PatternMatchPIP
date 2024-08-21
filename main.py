@@ -42,7 +42,13 @@ class patronesGUI:
         print("estos son los intervalos",self.intervalos)
     
     def empezarAnalisis(self):
-        leerCSV(self.archivoSeleccionado,self.intervalos)
+        patron = leerCSV(self.archivoSeleccionado,self.intervalos)
+        if patron == 0:
+            print("Ningun patron se reconocio")
+        elif patron == None:
+            print("Intenta otra vez")
+        else:
+            print("Se encontro similitud con el patron #",patron)        
 
 root = Tk()
 patronesGUI(root)
