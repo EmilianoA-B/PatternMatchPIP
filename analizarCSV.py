@@ -11,8 +11,10 @@ class grafica:
 def leerCSV(pathCSV:str, intervalo:int):
     if pathCSV == "":                   #sin archivo
         print("Ningún archivo detectado")
+        return None
     elif not pathCSV.endswith('.csv'):  #archivo que no es csv 
         print("Elije un archivo CSV")
+        return None
     else:                               #archivo csv
         lim_fil = 50000
         intervalo = intervalo/5 #Dividimos el intervalo entre 5, para que queden en saltos de 1,2,3 y 6
@@ -64,19 +66,67 @@ def leerCSV(pathCSV:str, intervalo:int):
         
         print("picos",picos)
         print("valles", valles)
-        #Pendiente
+        
+        #Calculo de pendientes entre valles y valles y, picos y picos
         grafCSV = grafica()
         
         for i in range(len(picos)-1):
             pendiente = (picos[i+1][1] - picos[i][1])/(picos[i+1][0] - picos[i][0])
             grafCSV.pendMax.append(pendiente)
-            
-        print("Pendientes de maxs",grafCSV.pendMax)
 
         for i in range(len(valles)-1):
-            pendiente = (valles[i+1][1] - valles[i][1])/(valles[i+1][0] - valles[i][0])
-            grafCSV.pendMin.append(pendiente)
-            
+            if (valles[i+1][0] - valles[i][0]) == 0:
+                grafCSV.pendMin.append("Nan")
+            else:
+                pendiente = (valles[i+1][1] - valles[i][1])/(valles[i+1][0] - valles[i][0])
+                grafCSV.pendMin.append(pendiente)
+        
+        #Valores de patrones
+        patrones = []
+        
+        patron1 = grafica()
+        patron1.pendMax = [-0.3, -0.3]
+        patron1.pendMin = [0.5]
+        patrones.append(patron1)
+        
+        patron2 = grafica()
+        patron2.pendMax = [0, 0]
+        patron2.pendMin = [0.9]
+        patrones.append(patron2)
+        
+        patron3 = grafica()
+        patron3.pendMax = [0, 0]
+        patron3.pendMin = [-1, 1]
+        patrones.append(patron3)
+        
         print("Pendientes de mins",grafCSV.pendMin)
+        print("Pendientes de maxs",grafCSV.pendMax)
         
+        for i in range(3):
+            patrones[i]
+            if comparacionPatrones(patrones[i], grafCSV):
+                return i+1
+        return 0
+
         
+#Funcion de comparacion        
+def comparacionPatrones(patron:grafica, graf:grafica):
+    tolerancia = 0.3        
+    if len(graf.pendMax) == len(patron.pendMax): #Si el patron y la figura tienen la misma cantidad de pendientes
+        for i in range(len(graf.pendMax)):  
+            rango_max = patron.pendMax[i] + (tolerancia*(0.01 + patron.pendMax[i]))  
+            rango_min = patron.pendMax[i] - (tolerancia*(0.01 + patron.pendMax[i]))  
+            if not(rango_min <= graf.pendMax[i] <= rango_max): #Si NO esta dentro del rango de tolerancia 
+                return False
+    else:
+        return False
+    if len(graf.pendMin) == len(patron.pendMin):
+        for i in range(len(graf.pendMin)):  
+            rango_max = patron.pendMin[i] + (tolerancia*(0.01 + patron.pendMin[i]))  
+            rango_min = patron.pendMin[i] - (tolerancia*(0.01 + patron.pendMin[i]))
+            if not(rango_min <= graf.pendMin[i] <= rango_max): #Si NO esta dentro del rango de tolerancia 
+                return False
+        
+    else:
+        return False
+    return True
