@@ -5,8 +5,8 @@ import pprint
 
 class grafica:
     def __init__(self):
-        self.pendMax =[]
-        self.pendMin = []
+        self.difsMax =[]
+        self.difsMin = []
 
 def leerCSV(pathCSV:str, intervalo:int):
     if pathCSV == "":                   #sin archivo
@@ -16,8 +16,9 @@ def leerCSV(pathCSV:str, intervalo:int):
         print("Elije un archivo CSV")
         return None
     else:                               #archivo csv
+        print("---------------Analisis-----------------")
         lim_fil = 50000
-        intervalo = intervalo/5 #Dividimos el intervalo entre 5, para que queden en saltos de 1,2,3 y 6
+        intervalo = intervalo//5 #Dividimos el intervalo entre 5, para que queden en saltos de 1,2,3 y 6
         listaDeVal = {}
         with open(pathCSV) as archCSV:
             lector = csv.reader(archCSV)
@@ -62,45 +63,57 @@ def leerCSV(pathCSV:str, intervalo:int):
         valles = sorted(valles, key=lambda data: data[1], reverse=True)[:3]
         
         picos.sort(key= lambda data: data[0])
+        
+        #Si uno de los valles es 0 mantenemos los 3 datos valles, si no, nos quedamos con 2 
+        flagForZero = False
+        for v in valles:
+            if 0 == v[0]:
+                flagForZero = True
+        if flagForZero == False:
+            valles = valles[:2]
         valles.sort(key= lambda data: data[0])
         
+        #Ver los picos y valles
         print("picos",picos)
-        print("valles", valles)
+        print("valles",valles)
         
-        #Calculo de pendientes entre valles y valles y, picos y picos
+        #Normalizacion de valores
+        picos, valles = normalizacion(picos,valles)
+        
+        #Ver valores normalizados
+        print("picos normalizados",picos)
+        print("valles normalizados",valles)
+        
+        #Calculo de diferencias
         grafCSV = grafica()
         
         for i in range(len(picos)-1):
-            pendiente = (picos[i+1][1] - picos[i][1])/(picos[i+1][0] - picos[i][0])
-            grafCSV.pendMax.append(pendiente)
-
+            grafCSV.difsMax.append(picos[i] - picos[i+1])
+            
         for i in range(len(valles)-1):
-            if (valles[i+1][0] - valles[i][0]) == 0:
-                grafCSV.pendMin.append("Nan")
-            else:
-                pendiente = (valles[i+1][1] - valles[i][1])/(valles[i+1][0] - valles[i][0])
-                grafCSV.pendMin.append(pendiente)
+            grafCSV.difsMin.append(valles[i] - valles[i+1])   
         
-        #Valores de patrones
+        #Ver difs
+        print("difs max",grafCSV.difsMax)
+        print("difs min",grafCSV.difsMin)
+        
+        #Valores de patrones TODO: Calcular difs en patrones
         patrones = []
         
         patron1 = grafica()
-        patron1.pendMax = [-0.3, -0.3]
-        patron1.pendMin = [0.5]
+        patron1.difsMax = [25, 15]
+        patron1.difsMin = [-25]
         patrones.append(patron1)
         
         patron2 = grafica()
-        patron2.pendMax = [0, 0]
-        patron2.pendMin = [0.9]
+        patron2.difsMax = [0, 0]
+        patron2.difsMin = [-50]
         patrones.append(patron2)
         
         patron3 = grafica()
-        patron3.pendMax = [0, 0]
-        patron3.pendMin = [-1, 1]
+        patron3.difsMax = [0, 0]
+        patron3.difsMin = [50, -50]
         patrones.append(patron3)
-        
-        print("Pendientes de mins",grafCSV.pendMin)
-        print("Pendientes de maxs",grafCSV.pendMax)
         
         for i in range(3):
             patrones[i]
@@ -111,22 +124,37 @@ def leerCSV(pathCSV:str, intervalo:int):
         
 #Funcion de comparacion        
 def comparacionPatrones(patron:grafica, graf:grafica):
-    tolerancia = 0.3        
-    if len(graf.pendMax) == len(patron.pendMax): #Si el patron y la figura tienen la misma cantidad de pendientes
-        for i in range(len(graf.pendMax)):  
-            rango_max = patron.pendMax[i] + (tolerancia*(0.01 + patron.pendMax[i]))  
-            rango_min = patron.pendMax[i] - (tolerancia*(0.01 + patron.pendMax[i]))  
-            if not(rango_min <= graf.pendMax[i] <= rango_max): #Si NO esta dentro del rango de tolerancia 
-                return False
+    tolerancia = 15 #Tolerancia del 15%
+    if len(patron.difsMin) == len(graf.difsMin):
+        for i in range(len(patron.difsMin)):
+            if abs(graf.difsMin[i] - patron.difsMin[i]) >= tolerancia:
+                return False 
     else:
         return False
-    if len(graf.pendMin) == len(patron.pendMin):
-        for i in range(len(graf.pendMin)):  
-            rango_max = patron.pendMin[i] + (tolerancia*(0.01 + patron.pendMin[i]))  
-            rango_min = patron.pendMin[i] - (tolerancia*(0.01 + patron.pendMin[i]))
-            if not(rango_min <= graf.pendMin[i] <= rango_max): #Si NO esta dentro del rango de tolerancia 
-                return False
-        
+    
+    if len(patron.difsMax) == len(graf.difsMax):
+        for i in range(len(patron.difsMax)):
+            if abs(graf.difsMax[i] - patron.difsMax[i]) >= tolerancia:
+                return False 
     else:
         return False
     return True
+
+def normalizacion(maximos, minimos):
+    auxMinimos = []
+    auxMaximos = []
+    maxVal = max(maximos, key=lambda val: val[1])[1]
+    minVal = min(minimos, key=lambda val: val[1])[1]
+    denom = maxVal - minVal
+    if denom == 0: #Si el rango de valores es de 0 a 0
+        return [0],[0]
+    
+    for i in range(len(maximos)): #Normalizar maximos
+        nom = maximos[i][1] - minVal
+        auxMaximos.append((nom/denom)*100)
+        
+    for i in range(len(minimos)): #Normalizar minimos
+        nom = minimos[i][1] - minVal
+        auxMinimos.append((nom/denom)*100)
+    return auxMaximos, auxMinimos
+    
