@@ -8,6 +8,112 @@ class grafica:
         self.difsMax =[]
         self.difsMin = []
 
+class patron(grafica):
+    def __init__(self):
+        self.numPatron = 0
+        self.puntos = 0
+        
+    #Función de comparación        
+    def comparacionPatrones(self, graf:grafica):
+        tolerancia = 15 #Tolerancia del 15%
+        if len(self.difsMin) == len(graf.difsMin):
+            for i in range(len(self.difsMin)):
+                if abs(graf.difsMin[i] - self.difsMin[i]) >= tolerancia:
+                    return False 
+        else:
+            return False
+        
+        if len(self.difsMax) == len(graf.difsMax):
+            for i in range(len(self.difsMax)):
+                if abs(graf.difsMax[i] - self.difsMax[i]) >= tolerancia:
+                    return False 
+        else:
+            return False
+        return True
+
+    def comprobarPatrones(self,datos):
+        puntosX = [0, len(datos) - 1]  # Indice  
+        puntosY = [datos[0][1], datos[-1][1]] # Precio
+        print("Todos los datos:")
+        pprint.pprint(datos)
+        
+        for curr_point in range(2, self.puntos):
+
+            md = 0.0 # Distancia maxima
+            md_i = -1 # Distancia
+            insert_index = -1
+
+            for k in range(0, curr_point - 1):
+
+                # Indice para punto izquierdo y indice para punto derecho
+                left_adj = k
+                right_adj = k + 1
+
+                time_diff = puntosX[right_adj] - puntosX[left_adj]
+                price_diff = puntosY[right_adj] - puntosY[left_adj]
+                slope = price_diff / time_diff
+                intercept = puntosY[left_adj] - puntosX[left_adj] * slope;
+                
+                for i in range(puntosX[left_adj] + 1, puntosX[right_adj]):
+                    
+                    d = 0.0 # Distancia
+                    d = abs( (slope * i + intercept) - datos[i][1] ) / (slope ** 2 + 1) ** 0.5
+                    
+                    if d > md: #Checar si la distancia actual es mayor que la maxima
+                        md = d
+                        md_i = i
+                        insert_index = right_adj
+
+            puntosX.insert(insert_index, md_i)
+            puntosY.insert(insert_index, datos[md_i][1])
+
+        print("Puntos X:",puntosX)
+        print("Puntos Y:",puntosY)
+        
+        picos = []
+        valles = []
+        i=0
+        
+        if puntosY[0] < puntosY[1]:
+            while i<len(puntosY):
+                valles.append(tuple((puntosX[i], puntosY[i])))
+                i+=1
+                if i<len(puntosY):
+                    picos.append(tuple((puntosX[i], puntosY[i])))
+                    i+=1
+        else:
+            while i<len(puntosY):
+                picos.append(tuple((puntosX[i], puntosY[i])))
+                i+=1
+                if i<len(puntosY):
+                    valles.append(tuple((puntosX[i], puntosY[i])))
+                    i+=1
+                    
+        print("picos no normalizados",picos)
+        print("valles no normalizados",valles)
+        
+        #Normalizar datos en escala de 0 a 100
+        picos, valles = normalizacion(picos,valles)
+        
+        #Ver valores normalizados
+        print("picos normalizados",picos)
+        print("valles normalizados",valles)
+        
+        grafCSV = grafica()
+        
+        for i in range(len(picos)-1):
+            grafCSV.difsMax.append(picos[i] - picos[i+1])
+            
+        for i in range(len(valles)-1):
+            grafCSV.difsMin.append(valles[i] - valles[i+1])   
+        
+        #Ver difs
+        print("difs max",grafCSV.difsMax)
+        print("difs min",grafCSV.difsMin)
+        
+        return self.comparacionPatrones(grafCSV)
+        
+
 def leerCSV(pathCSV:str, intervalo:int):
     if pathCSV == "":                   #sin archivo
         print("Ningún archivo detectado")
@@ -32,114 +138,44 @@ def leerCSV(pathCSV:str, intervalo:int):
                     continue
         #Graficar     
         datos = sorted(listaDeVal.items())
-        #pprint.pprint(datos)
         x,y = zip(*datos)
         plt.cla()
         plt.plot(x,y)
         plt.savefig("graph.png")
-
-        #Encontrar picos y valles
-        picos = []
-        valles = []
         
-        if datos[0][1] > datos[1][1]:
-            picos.append(datos[0])
-        elif datos[0][1] < datos[1][1]:
-            valles.append(datos[0])
-        
-        for i in range(1,len(datos)-1):
-            if datos[i][1] > datos[i-1][1] and datos[i][1] > datos[i+1][1]:
-                picos.append(datos[i])
-            elif datos[i][1] < datos[i-1][1] and datos[i][1] < datos[i+1][1]:
-                valles.append(datos[i])  
-                
-        if datos[-1][1] > datos[-2][1]:
-            picos.append(datos[-1])
-        elif datos[-1][1] < datos[-2][1]:
-            valles.append(datos[-1])
-         
-        #Usamos solo los 3 valores más pronunciados para maximos y mínimos
-        picos = sorted(picos, key= lambda data: data[1], reverse=True)[:3]
-        valles = sorted(valles, key=lambda data: data[1], reverse=True)[:3]
-        
-        picos.sort(key= lambda data: data[0])
-        
-        #Si uno de los valles es 0 mantenemos los 3 datos valles, si no, nos quedamos con 2 
-        flagForZero = False
-        for v in valles:
-            if 0 == v[0]:
-                flagForZero = True
-        if flagForZero == False:
-            valles = valles[:2]
-        valles.sort(key= lambda data: data[0])
-        
-        #Ver los picos y valles
-        print("picos",picos)
-        print("valles",valles)
-        
-        #Normalizacion de valores
-        picos, valles = normalizacion(picos,valles)
-        
-        #Ver valores normalizados
-        print("picos normalizados",picos)
-        print("valles normalizados",valles)
-        
-        #Calculo de diferencias
-        grafCSV = grafica()
-        
-        for i in range(len(picos)-1):
-            grafCSV.difsMax.append(picos[i] - picos[i+1])
-            
-        for i in range(len(valles)-1):
-            grafCSV.difsMin.append(valles[i] - valles[i+1])   
-        
-        #Ver difs
-        print("difs max",grafCSV.difsMax)
-        print("difs min",grafCSV.difsMin)
-        
-        #Valores de patrones TODO: Calcular difs en patrones
+        #Valores de patrones
         patrones = []
         
-        patron1 = grafica()
+        patron1 = patron()
         patron1.difsMax = [25, 15]
         patron1.difsMin = [-25]
+        patron1.numPatron = 1
+        patron1.puntos = 5
         patrones.append(patron1)
         
-        patron2 = grafica()
+        patron2 = patron()
         patron2.difsMax = [0, 0]
         patron2.difsMin = [-50]
+        patron2.numPatron = 2
+        patron2.puntos = 5
         patrones.append(patron2)
         
-        patron3 = grafica()
+        patron3 = patron()
         patron3.difsMax = [0, 0]
         patron3.difsMin = [50, -50]
+        patron3.numPatron = 3
+        patron3.puntos = 6
         patrones.append(patron3)
         
-        for i in range(3):
-            patrones[i]
-            if comparacionPatrones(patrones[i], grafCSV):
-                return i+1
+   
+        for i in range(len(patrones)):
+            patIterator = patrones[i]
+            if patIterator.comprobarPatrones(datos):
+                return patIterator.numPatron
+                
         return 0
 
-        
-#Funcion de comparacion        
-def comparacionPatrones(patron:grafica, graf:grafica):
-    tolerancia = 15 #Tolerancia del 15%
-    if len(patron.difsMin) == len(graf.difsMin):
-        for i in range(len(patron.difsMin)):
-            if abs(graf.difsMin[i] - patron.difsMin[i]) >= tolerancia:
-                return False 
-    else:
-        return False
-    
-    if len(patron.difsMax) == len(graf.difsMax):
-        for i in range(len(patron.difsMax)):
-            if abs(graf.difsMax[i] - patron.difsMax[i]) >= tolerancia:
-                return False 
-    else:
-        return False
-    return True
-
+#Función de normalización
 def normalizacion(maximos, minimos):
     auxMinimos = []
     auxMaximos = []
