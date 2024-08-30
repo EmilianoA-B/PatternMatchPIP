@@ -30,7 +30,7 @@ class patronesGUI:
         menuIntervalos = OptionMenu(self.interfaz,intervalos,*opcionesDeIntervalos,command=self.getIntervalos)
         menuIntervalos.grid(row=1,column=3,sticky=(S))
 
-        botonParaIniciar = ttk.Button(self.interfaz, text="Analizar Datos", command=self.empezarAnalisis) #To do: insert function to run analysis
+        botonParaIniciar = ttk.Button(self.interfaz, text="Analizar Datos", command=self.empezarAnalisis)
         botonParaIniciar.grid(row=2,column=1)
 
         for child in self.interfaz.winfo_children():
@@ -68,6 +68,7 @@ class patronesGUI:
         grafica = Label(self.interfaz, image=graph)
         grafica.image = graph
         grafica.grid(padx=5, pady=5, row=0,column=1,columnspan=4)
+        
 
 root = Tk()
 patronesGUI(root)
