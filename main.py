@@ -25,13 +25,13 @@ class patronesGUI:
         intervalos.set(opcionesDeIntervalos[0])
 
         textoIntervalos = Label(self.interfaz, text="Intervalos:")
-        textoIntervalos.grid(row=1,column=2,sticky=(S))
+        textoIntervalos.grid(row=1,column=2,sticky=(S,E))
 
         menuIntervalos = OptionMenu(self.interfaz,intervalos,*opcionesDeIntervalos,command=self.getIntervalos)
-        menuIntervalos.grid(row=1,column=3,sticky=(S))
+        menuIntervalos.grid(row=1,column=3,sticky=(S,W))
 
         botonParaIniciar = ttk.Button(self.interfaz, text="Analizar Datos", command=self.empezarAnalisis)
-        botonParaIniciar.grid(row=2,column=1)
+        botonParaIniciar.grid(row=2,column=1, sticky=(S,W))
 
         for child in self.interfaz.winfo_children():
             child.grid_configure(padx=5,pady=5)
