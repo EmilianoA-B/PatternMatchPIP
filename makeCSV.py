@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 # Parameters
-n_points = 5000
+n_points = 4000
 time_start = datetime(2024, 1, 1)
 time_interval = timedelta(minutes=5)
 
@@ -11,8 +11,8 @@ time_series = [time_start + i * time_interval for i in range(n_points)]
 values = np.zeros(n_points)
 
 # Asignar datos
-all_positions = [0,1000,2000,3000,5000]
-all_values = [10.0,-3.0,11.0,6,9.5]
+all_positions = [0,1000,2000,3000,4000]
+all_values = [10.0,-4.7,3.5,1.1,4.9]
 
 # Puntos de incio y puntos de final
 for i in range(len(all_positions) - 1):
@@ -33,6 +33,6 @@ df = pd.DataFrame({
 })
 
 #Crear csv
-file_path = './patron1parecido.csv'
+file_path = './patrones/patron1kindofparecido.csv'
 df.to_csv(file_path, index=False)
 file_path
