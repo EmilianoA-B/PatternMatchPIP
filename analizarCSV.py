@@ -5,17 +5,16 @@ import pprint
 
 class grafica:
     def __init__(self):
-        self.difsMax =[]
+        self.difsMax = []
         self.difsMin = []
 
 class patron(grafica):
     def __init__(self):
         self.numPatron = 0
         self.puntos = 0
-        
-    #Función de comparación        
+              
     def comparacionPatrones(self, graf:grafica):
-        tolerancia = 15 #Tolerancia del 15%
+        tolerancia = 15 
         if len(self.difsMin) == len(graf.difsMin):
             for i in range(len(self.difsMin)):
                 if abs(graf.difsMin[i] - self.difsMin[i]) >= tolerancia:
@@ -39,9 +38,9 @@ class patron(grafica):
         
         for curr_point in range(2, self.puntos):
 
-            md = 0.0 # Distancia maxima
-            md_i = -1 # Distancia
-            insert_index = -1
+            distancia_max = 0.0 # Distancia maxima
+            dist_max_indice = -1 # Distancia
+            indice_insert = -1
 
             for k in range(0, curr_point - 1):
 
@@ -49,23 +48,23 @@ class patron(grafica):
                 left_adj = k
                 right_adj = k + 1
 
-                time_diff = puntosX[right_adj] - puntosX[left_adj]
-                price_diff = puntosY[right_adj] - puntosY[left_adj]
-                slope = price_diff / time_diff
-                intercept = puntosY[left_adj] - puntosX[left_adj] * slope;
+                diff_tiempo = puntosX[right_adj] - puntosX[left_adj]
+                diff_precio = puntosY[right_adj] - puntosY[left_adj]
+                pendiente = diff_precio / diff_tiempo
+                pInterseccion = puntosY[left_adj] - puntosX[left_adj] * pendiente;
                 
                 for i in range(puntosX[left_adj] + 1, puntosX[right_adj]):
                     
-                    d = 0.0 # Distancia
-                    d = abs( (slope * i + intercept) - datos[i][1] ) / (slope ** 2 + 1) ** 0.5
+                    distancia = 0.0 # Distancia
+                    distancia = abs( (pendiente * i + pInterseccion) - datos[i][1] ) / (pendiente ** 2 + 1) ** 0.5
                     
-                    if d > md: #Checar si la distancia actual es mayor que la maxima
-                        md = d
-                        md_i = i
-                        insert_index = right_adj
+                    if distancia > distancia_max: #Checar si la distancia actual es mayor que la maxima
+                        distancia_max = distancia
+                        dist_max_indice = i
+                        indice_insert = right_adj
 
-            puntosX.insert(insert_index, md_i)
-            puntosY.insert(insert_index, datos[md_i][1])
+            puntosX.insert(indice_insert, dist_max_indice)
+            puntosY.insert(indice_insert, datos[dist_max_indice][1])
 
         print("Puntos X:",puntosX)
         print("Puntos Y:",puntosY)
